@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D2137">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SUNAFIL Inspector">
+<meta name="description" content="Herramienta de inspección SST para obras de construcción civil - Lima Metropolitana">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>SUNAFIL Inspector SST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D2137;
+  --navy-mid: #163352;
+  --navy-light: #1E4A74;
+  --blue: #1A6EC4;
+  --blue-light: #2E8FE8;
+  --gold: #E8A020;
+  --gold-light: #F5B840;
+  --red: #C43030;
+  --red-light: #E84444;
+  --green: #2A7A3A;
+  --green-light: #38A050;
+  --amber: #B86010;
+  --amber-light: #E07820;
+  --white: #F4F6F9;
+  --grey-1: #E0E4EA;
+  --grey-2: #B8BEC8;
+  --grey-3: #7A8494;
+  --grey-4: #3A4454;
+  --text: #1A2030;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.18);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.28);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:15px;color:var(--text);background:#EDF0F5;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.app-header{background:var(--navy);color:var(--white);padding:0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-lg)}
+.header-top{display:flex;align-items:center;gap:10px;padding:10px 14px 8px}
+.header-badge{background:var(--gold);color:var(--navy);font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 8px;border-radius:2px;letter-spacing:0.08em;white-space:nowrap}
+.header-info{flex:1;min-width:0}
+.header-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-sub{font-size:10px;color:var(--grey-2);margin-top:1px}
+.header-status{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--grey-2);white-space:nowrap}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--grey-3)}
+.status-dot.online{background:var(--green-light);box-shadow:0 0 6px var(--green-light)}
+
+/* TABS */
+.tabs-bar{display:flex;background:var(--navy-mid);border-top:1px solid rgba(255,255,255,0.07);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex:1;min-width:70px;padding:11px 8px;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--grey-2);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;letter-spacing:0.05em;text-transform:uppercase;transition:all 0.15s;white-space:nowrap}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(232,160,32,0.06)}
+.tab-btn:hover:not(.active){color:var(--white)}
+
+/* MAIN CONTENT */
+.main{padding:14px;max-width:900px;margin:0 auto}
+.pane{display:none}.pane.active{display:block}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--grey-1);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.card-hdr{padding:10px 14px;background:var(--navy);color:var(--white);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.card-hdr.gold{background:var(--gold);color:var(--navy)}
+.card-hdr.red{background:var(--red);color:var(--white)}
+.card-hdr.amber{background:var(--amber);color:var(--white)}
+.card-hdr.green{background:var(--green);color:var(--white)}
+.card-body{padding:14px}
+
+/* SECTION LABELS */
+.sec-lbl{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--grey-3);text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--grey-1)}
+
+/* FORM ELEMENTS */
+.flbl{font-size:12px;font-weight:600;color:var(--navy);display:block;margin-bottom:5px;font-family:var(--mono)}
+textarea,input[type=text],input[type=number]{font-family:var(--sans);font-size:14px;width:100%;border:2px solid var(--grey-1);border-radius:var(--radius);padding:10px 12px;background:#fff;color:var(--text);outline:none;transition:border-color 0.15s;-webkit-appearance:none;appearance:none}
+textarea:focus,input[type=text]:focus,input[type=number]:focus{border-color:var(--blue);background:#fff}
+textarea{resize:vertical;min-height:80px}
+.field{margin-bottom:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:480px){.row2{grid-template-columns:1fr}}
+
+/* BUTTONS */
+.btn{font-family:var(--mono);font-size:13px;font-weight:600;padding:13px 18px;border-radius:var(--radius);border:none;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.03em;min-height:48px;width:100%}
+.btn-primary{background:var(--blue);color:var(--white)}.btn-primary:hover{background:var(--blue-light)}.btn-primary:active{transform:scale(0.98)}
+.btn-success{background:var(--green);color:var(--white)}.btn-success:hover{background:var(--green-light)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold-light)}
+.btn-ghost{background:transparent;color:var(--grey-3);border:2px solid var(--grey-1)}.btn-ghost:hover{border-color:var(--grey-2);color:var(--text)}
+.btn-danger{background:transparent;color:var(--red);border:2px solid var(--red)}.btn-danger:hover{background:var(--red);color:var(--white)}
+.btn-sm{min-height:36px;padding:8px 14px;font-size:11px}
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn-row .btn{flex:1}
+
+/* CALC GRID */
+.idx-group{border:2px solid var(--grey-1);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px}
+.idx-group-hdr{padding:8px 12px;background:var(--navy-mid);color:var(--white);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.idx-grid{display:grid;gap:0}
+.idx-grid-3{grid-template-columns:repeat(3,1fr)}
+.idx-grid-2{grid-template-columns:repeat(2,1fr)}
+.idx-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px 6px;border-right:1px solid var(--grey-1);cursor:pointer;background:#fff;transition:all 0.12s;min-height:70px;position:relative;user-select:none;-webkit-user-select:none}
+.idx-opt:last-child{border-right:none}
+.idx-opt:active{transform:scale(0.97)}
+.idx-opt .iv{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--grey-2);margin-bottom:4px;transition:color 0.12s}
+.idx-opt .id{font-size:10px;color:var(--grey-3);line-height:1.3;max-width:90px}
+.idx-opt.sel{background:#EBF4FF}
+.idx-opt.sel .iv{color:var(--blue)}
+.idx-opt.sel .id{color:var(--navy)}
+.idx-opt.sel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue)}
+.sev-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px 6px;border-right:1px solid var(--grey-1);cursor:pointer;background:#fff;transition:all 0.12s;min-height:70px;position:relative;user-select:none;-webkit-user-select:none}
+.sev-opt:last-child{border-right:none}
+.sev-opt:active{transform:scale(0.97)}
+.sev-opt .sv{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--grey-2);margin-bottom:4px}
+.sev-opt .sd{font-size:10px;color:var(--grey-3);line-height:1.3;max-width:90px}
+.sev-opt.sel-1{background:#EEF7EE}.sev-opt.sel-1 .sv{color:var(--green)}.sev-opt.sel-1::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--green)}
+.sev-opt.sel-2{background:#FFF6E8}.sev-opt.sel-2 .sv{color:var(--amber)}.sev-opt.sel-2::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--amber)}
+.sev-opt.sel-3{background:#FDEAEA}.sev-opt.sel-3 .sv{color:var(--red)}.sev-opt.sel-3::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+.ic-sublbl{font-family:var(--mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;padding:5px 12px;background:var(--grey-1);color:var(--grey-4);border-top:1px solid var(--grey-1);border-bottom:1px solid var(--grey-1)}
+
+/* NR RESULT BOX */
+.nr-box{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--radius-lg);border:2px solid var(--grey-1);background:#fff;margin-top:12px}
+.nr-num{font-family:var(--mono);font-size:36px;font-weight:700;min-width:60px;text-align:center}
+.nr-info{flex:1}
+.nr-level{font-family:var(--mono);font-size:15px;font-weight:700;margin-bottom:2px}
+.nr-detail{font-size:11px;color:var(--grey-3)}
+.nr-badge{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:2px;white-space:nowrap}
+.nr-it .nr-num,.nr-it .nr-level{color:var(--red)}.nr-it{border-color:var(--red)}.nr-badge.it{background:var(--red);color:#fff}
+.nr-im .nr-num,.nr-im .nr-level{color:var(--amber)}.nr-im{border-color:var(--amber)}.nr-badge.im{background:var(--amber);color:#fff}
+.nr-ok .nr-num,.nr-ok .nr-level{color:var(--green)}.nr-ok{border-color:var(--green)}.nr-badge.ok{background:var(--green);color:#fff}
+
+/* FORMULA */
+.formula-bar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--navy);border-radius:var(--radius);font-family:var(--mono);font-size:12px;font-weight:600;color:var(--gold);margin-bottom:12px;letter-spacing:0.02em}
+
+/* RESULT CARDS */
+.res-card{border:2px solid var(--grey-1);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px}
+.res-card-hdr{padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.res-card-body{padding:12px 14px;font-size:13px;line-height:1.7}
+.art-block{margin:6px 0;padding:8px 12px;background:#F0F4FA;border-left:4px solid var(--blue);border-radius:0 var(--radius) var(--radius) 0}
+.art-ref{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--blue);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em}
+.art-txt{font-size:12px;line-height:1.6;color:var(--text)}
+
+/* ANEXO DOC */
+.doc-wrap{border:2px solid var(--grey-1);border-radius:var(--radius-lg);padding:20px 22px;background:#fff;box-shadow:var(--shadow)}
+.doc-body{font-family:var(--sans);font-size:13px;line-height:1.9;color:var(--text)}
+.doc-body p{margin-bottom:14px}
+
+/* NORM TABLES */
+.norm-section{margin-bottom:16px}
+.norm-section h3{font-family:var(--mono);font-size:11px;font-weight:700;padding:9px 12px;background:var(--navy);color:var(--gold);border-radius:var(--radius) var(--radius) 0 0;letter-spacing:0.05em;text-transform:uppercase}
+.norm-table{width:100%;border-collapse:collapse;font-size:12px;border:2px solid var(--grey-1);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
+.norm-table th{background:var(--navy-mid);color:var(--grey-1);padding:7px 10px;text-align:left;font-family:var(--mono);font-size:10px;font-weight:600;border-bottom:1px solid var(--grey-2)}
+.norm-table td{padding:7px 10px;border-bottom:1px solid var(--grey-1);vertical-align:top;line-height:1.5}
+.norm-table tr:last-child td{border-bottom:none}
+.norm-table tr:nth-child(even) td{background:#F8FAFC}
+
+/* ALERTS / BADGES */
+.alert{padding:10px 12px;border-radius:var(--radius);font-size:12px;margin-bottom:10px}
+.alert-ok{background:#EEF7EE;color:var(--green);border:1px solid var(--green)}
+.alert-warn{background:#FFF6E8;color:var(--amber);border:1px solid var(--amber)}
+.alert-err{background:#FDEAEA;color:var(--red);border:1px solid var(--red)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:36px 20px;color:var(--grey-3);font-size:13px}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+/* SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:var(--white);font-family:var(--mono);font-size:12px;padding:10px 18px;border-radius:var(--radius);opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap;border:1px solid var(--blue)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* LOADING OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(13,33,55,0.88);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.overlay.show{display:flex}
+.overlay-txt{color:var(--white);font-family:var(--mono);font-size:13px}
+.big-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
+
+/* MOBILE BOTTOM SAFE AREA */
+@supports (padding-bottom: env(safe-area-inset-bottom)){
+  .main{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+}
+
+/* INSTALL BANNER */
+.install-banner{display:none;background:var(--gold);color:var(--navy);padding:10px 14px;align-items:center;gap:10px;font-size:12px;font-weight:600;font-family:var(--mono)}
+.install-banner.show{display:flex}
+.install-banner button{background:var(--navy);color:var(--white);border:none;padding:6px 12px;border-radius:2px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+
+@media(min-width:600px){
+  .main{padding:18px 20px}
+  .idx-opt .id,.sev-opt .sd{max-width:130px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="install-banner" id="install-banner">
+  <span>📲 Instalar SUNAFIL Inspector en tu dispositivo</span>
+  <button onclick="installApp()">Instalar</button>
+  <button onclick="document.getElementById('install-banner').classList.remove('show')" style="background:transparent;color:var(--navy);border:1px solid var(--navy)">✕</button>
+</div>
+
+<header class="app-header">
+  <div class="header-top">
+    <span class="header-badge">SUNAFIL</span>
+    <div class="header-info">
+      <div class="header-title">Inspector SST — Construcción Civil</div>
+      <div class="header-sub">Lima Metropolitana · RM 034-2020-TR · NTE G.050 · RS 021-83-TR. Desarrollado por JHURTADO</div>
+    </div>
+    <div class="header-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-txt">—</span>
+    </div>
+  </div>
+  <div class="tabs-bar">
+    <button class="tab-btn active" id="tab-visita" onclick="switchTab('visita')">Visita</button>
+    <button class="tab-btn" id="tab-resultado" onclick="switchTab('resultado')">Resultado</button>
+    <button class="tab-btn" id="tab-anexo" onclick="switchTab('anexo')">Constancia</button>
+    <button class="tab-btn" id="tab-normas" onclick="switchTab('normas')">Normas</button>
+  </div>
+</header>
+
+<main class="main">
+
+<!-- ═══════════════════ PESTAÑA: VISITA ═══════════════════ -->
+<div id="pane-visita" class="pane active">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div class="sec-lbl" style="margin:0;flex:1">Registro de hecho verificado</div>
+    <button class="btn btn-ghost btn-sm" style="width:auto;margin-left:12px" onclick="limpiarFormulario()">⟳ Limpiar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">Datos del hecho constatado</div>
+    <div class="card-body">
+      <div class="field">
+        <span class="flbl">Hechos constatados *</span>
+        <textarea id="v-hechos" rows="4" placeholder="Describa detalladamente los hechos verificados durante la inspección..."></textarea>
+      </div>
+      <div class="field">
+        <span class="flbl">Ubicación o instalación *</span>
+        <input type="text" id="v-ubicacion" placeholder="Lugar exacto donde se verificó el hecho">
+      </div>
+      <div class="field">
+        <span class="flbl">Descripción de tareas</span>
+        <textarea id="v-tareas" rows="2" placeholder="Tareas que se realizaban al momento de la verificación..."></textarea>
+      </div>
+      <div class="row2">
+        <div class="field" style="margin-bottom:0">
+          <span class="flbl">Riesgo grave e inminente *</span>
+          <input type="text" id="v-riesgo" placeholder="Ej: Riesgo de caída de alturas">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <span class="flbl">Medida correctiva</span>
+          <input type="text" id="v-medida" placeholder="Medida para el inspeccionado">
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px;margin-bottom:0">
+        <span class="flbl">N° trabajadores afectados</span>
+        <input type="number" id="v-ntrab" min="1" placeholder="Número" style="width:160px">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-lbl">Calculadora Nivel de Riesgo — RM N° 034-2020-TR</div>
+  <div class="formula-bar">NR = ( IP + ICE + IC + IE ) × S</div>
+
+  <!-- IP -->
+  <div class="idx-group">
+    <div class="idx-group-hdr">
+      <span>IP — Personas expuestas</span>
+      <span id="ip-lbl" style="color:var(--gold);font-size:12px"></span>
+    </div>
+    <div class="idx-grid idx-grid-3">
+      <div class="idx-opt" id="ip-1" onclick="selIdx('ip',1)">
+        <span class="iv">1</span><span class="id">De 1 a 3 trabajadores</span>
+      </div>
+      <div class="idx-opt" id="ip-2" onclick="selIdx('ip',2)">
+        <span class="iv">2</span><span class="id">De 4 a 12 trabajadores</span>
+      </div>
+      <div class="idx-opt" id="ip-3" onclick="selIdx('ip',3)">
+        <span class="iv">3</span><span class="id">Más de 12 trabajadores</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ICE -->
+  <div class="idx-group">
+    <div class="idx-group-hdr">
+      <span>ICE — Condiciones SST existentes</span>
+      <span id="ice-lbl" style="color:var(--gold);font-size:12px"></span>
+    </div>
+    <div class="idx-grid idx-grid-3">
+      <div class="idx-opt" id="ice-1" onclick="selIdx('ice',1)">
+        <span class="iv">1</span><span class="id">Ninguna condición desfavorable</span>
+      </div>
+      <div class="idx-opt" id="ice-2" onclick="selIdx('ice',2)">
+        <span class="iv">2</span><span class="id">Solo una condición desfavorable</span>
+      </div>
+      <div class="idx-opt" id="ice-3" onclick="selIdx('ice',3)">
+        <span class="iv">3</span><span class="id">Dos o más condiciones desfavorables</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- IC -->
+  <div class="idx-group">
+    <div class="idx-group-hdr">
+      <span>IC — Capacitación y entrenamiento</span>
+      <span id="ic-lbl" style="color:var(--gold);font-size:12px"></span>
+    </div>
+    <div class="ic-sublbl">Sin accidente de trabajo mortal</div>
+    <div class="idx-grid idx-grid-3">
+      <div class="idx-opt" id="ic-1" onclick="selIC('1')">
+        <span class="iv">1</span><span class="id">Sin práctica incorrecta ni falta de capacitación</span>
+      </div>
+      <div class="idx-opt" id="ic-2" onclick="selIC('2')">
+        <span class="iv">2</span><span class="id">Solo una de las dos condiciones</span>
+      </div>
+      <div class="idx-opt" id="ic-3" onclick="selIC('3')">
+        <span class="iv">3</span><span class="id">Práctica incorrecta Y falta de capacitación</span>
+      </div>
+    </div>
+    <div class="ic-sublbl">Con accidente de trabajo mortal</div>
+    <div class="idx-grid idx-grid-2">
+      <div class="idx-opt" id="ic-1b" onclick="selIC('1b')">
+        <span class="iv">1</span><span class="id">Empleador evidencia capacitación</span>
+      </div>
+      <div class="idx-opt" id="ic-3b" onclick="selIC('3b')">
+        <span class="iv">3</span><span class="id">Empleador NO evidencia capacitación</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- IE -->
+  <div class="idx-group">
+    <div class="idx-group-hdr">
+      <span>IE — Exposición al riesgo</span>
+      <span id="ie-lbl" style="color:var(--gold);font-size:12px"></span>
+    </div>
+    <div class="idx-grid idx-grid-3">
+      <div class="idx-opt" id="ie-1" onclick="selIdx('ie',1)">
+        <span class="iv">1</span><span class="id">No existe exposición al riesgo</span>
+      </div>
+      <div class="idx-opt" id="ie-2" onclick="selIdx('ie',2)">
+        <span class="iv">2</span><span class="id">Exposición no vinculada a act. principal</span>
+      </div>
+      <div class="idx-opt" id="ie-3" onclick="selIdx('ie',3)">
+        <span class="iv">3</span><span class="id">Exposición vinculada a act. principal</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- S -->
+  <div class="idx-group">
+    <div class="idx-group-hdr">
+      <span>S — Severidad del daño</span>
+      <span id="sev-lbl" style="font-size:12px"></span>
+    </div>
+    <div class="idx-grid idx-grid-3">
+      <div class="sev-opt" id="sev-1" onclick="selSev(1)">
+        <span class="sv">1</span><span class="sd">Lesión sin incapacidad / discomfort</span>
+      </div>
+      <div class="sev-opt" id="sev-2" onclick="selSev(2)">
+        <span class="sv">2</span><span class="sd">Incapacidad temporal o daño reversible</span>
+      </div>
+      <div class="sev-opt" id="sev-3" onclick="selSev(3)">
+        <span class="sv">3</span><span class="sd">Incap. permanente / irreversible / muerte</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nr-box" id="nr-box" style="display:none">
+    <div class="nr-num" id="nr-num">—</div>
+    <div class="nr-info">
+      <div class="nr-level" id="nr-level">—</div>
+      <div class="nr-detail" id="nr-detail">—</div>
+    </div>
+    <div id="nr-badge"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-dictamen" onclick="generarDictamen()">
+      Generar Dictamen RGI
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════ PESTAÑA: RESULTADO ═══════════════════ -->
+<div id="pane-resultado" class="pane">
+  <div id="res-content">
+    <div class="empty"><div class="empty-icon">📋</div>Complete la visita y genere el dictamen para ver el resultado aquí.</div>
+  </div>
+  <div id="res-actions" style="display:none;margin-top:12px">
+    <button class="btn btn-success" onclick="grabarAnexo()">
+      ✔ Grabar en Anexo de Constancia
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════ PESTAÑA: CONSTANCIA ═══════════════════ -->
+<div id="pane-anexo" class="pane">
+  <div id="anexo-empty" class="empty">
+    <div class="empty-icon">📄</div>
+    Grabe al menos un hecho desde la pestaña Resultado para generar la constancia.
+  </div>
+  <div id="anexo-content" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--grey-3)"><span id="anexo-count">0</span> hecho(s)</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" style="width:auto" onclick="copiarAnexo()">⎘ Copiar</button>
+        <button class="btn btn-danger btn-sm" style="width:auto" onclick="limpiarAnexo()">✕ Limpiar</button>
+      </div>
+    </div>
+    <div id="copy-msg" class="alert alert-ok" style="display:none">Texto copiado al portapapeles.</div>
+    <div class="doc-wrap">
+      <div id="anexo-doc" class="doc-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PESTAÑA: NORMAS ═══════════════════ -->
+<div id="pane-normas" class="pane">
+  <div class="norm-section">
+    <h3>RM N° 034-2020-TR — Tabla 1: Probabilidad (P)</h3>
+    <table class="norm-table">
+      <tr><th>Valor</th><th>IP</th><th>ICE</th><th>IC</th><th>IE</th></tr>
+      <tr><td><strong>3</strong></td><td>Más de 12</td><td>2+ condiciones desfavorables</td><td>Sin acc.: práctica incorrecta+falta capac. | Con acc.: sin evidencia</td><td>Vinculado a act. principal</td></tr>
+      <tr><td><strong>2</strong></td><td>De 4 a 12</td><td>1 condición desfavorable</td><td>Sin acc.: una condición | Con acc.: trabajadores sin evidencia</td><td>No vinculado a act. principal</td></tr>
+      <tr><td><strong>1</strong></td><td>De 1 a 3</td><td>Ninguna</td><td>Sin acc.: sin práctica incorrecta | Con acc.: empleador evidencia capac.</td><td>Sin exposición</td></tr>
+    </table>
+  </div>
+  <div class="norm-section">
+    <h3>RM N° 034-2020-TR — Tabla 2: Severidad (S)</h3>
+    <table class="norm-table">
+      <tr><th>Valor</th><th>Descripción</th></tr>
+      <tr><td><strong>1</strong></td><td>Lesión sin incapacidad o discomfort</td></tr>
+      <tr><td><strong>2</strong></td><td>Lesión con incapacidad temporal o daño reversible</td></tr>
+      <tr><td><strong>3</strong></td><td>Lesión con incapacidad permanente, daño irreversible o muerte</td></tr>
+    </table>
+  </div>
+  <div class="norm-section">
+    <h3>RM N° 034-2020-TR — Tabla 3: Nivel de Riesgo NR = P × S</h3>
+    <table class="norm-table">
+      <tr><th>NR</th><th>Nivel</th><th>Medida inspectiva</th></tr>
+      <tr><td>4–16</td><td>No grave</td><td>Control preventivo</td></tr>
+      <tr><td>17–24</td><td style="color:var(--amber);font-weight:700">IMPORTANTE (IM)</td><td>Paralización y/o prohibición (Art. 3)</td></tr>
+      <tr><td>25–36</td><td style="color:var(--red);font-weight:700">INTOLERABLE (IT)</td><td>Paralización + cierre temporal (Art. 4)</td></tr>
+    </table>
+  </div>
+  <div class="norm-section">
+    <h3>Normas aplicables — Construcción Civil Perú</h3>
+    <table class="norm-table">
+      <tr><th>Norma</th><th>Alcance</th></tr>
+      <tr><td><strong>NTE G.050</strong></td><td>Seguridad durante la construcción (RNE)</td></tr>
+      <tr><td><strong>RS N° 021-83-TR</strong></td><td>Normas básicas de seguridad e higiene en obras de edificación</td></tr>
+      <tr><td><strong>Ley N° 29783</strong></td><td>Ley de Seguridad y Salud en el Trabajo</td></tr>
+      <tr><td><strong>DS N° 005-2012-TR</strong></td><td>Reglamento de la Ley N° 29783</td></tr>
+      <tr><td><strong>DS N° 011-2019-TR</strong></td><td>Reglamento de SST para el sector Construcción</td></tr>
+      <tr><td><strong>RM N° 034-2020-TR</strong></td><td>Criterios determinación nivel de riesgo SST</td></tr>
+      <tr><td><strong>Ley N° 28806</strong></td><td>Ley General de Inspección del Trabajo</td></tr>
+      <tr><td><strong>DS N° 019-2006-TR</strong></td><td>Reglamento Ley General de Inspección del Trabajo</td></tr>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay">
+  <div class="big-spinner"></div>
+  <div class="overlay-txt" id="overlay-txt">Analizando...</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  BASE DE NORMAS PRECARGADA (sin API externa)
+// ═══════════════════════════════════════════
+var NORMAS_DB = {
+  // NTE G.050
+  'g050_3_1': { ref: 'Numeral 3.1 de la NTE G.050', texto: 'En toda obra de construcción es obligatorio el uso de equipo de protección personal. Todo trabajador y visitante deberá usar como mínimo casco de seguridad, calzado de seguridad y ropa de trabajo adecuada al riesgo.' },
+  'g050_4_1': { ref: 'Numeral 4.1 de la NTE G.050', texto: 'El responsable de la obra debe implementar un plan de señalización de seguridad que incluya señales de prohibición, advertencia, obligación y emergencia en todas las áreas de trabajo.' },
+  'g050_8_4': { ref: 'Numeral 8.4 de la NTE G.050', texto: 'Las escaleras fijas deben estar equipadas con barandas de seguridad a ambos lados, con una altura mínima de 0.90 m, y con rodapiés que eviten la caída de objetos. Las escaleras portátiles deben sujetarse en su parte superior e inferior.' },
+  'g050_8_5': { ref: 'Numeral 8.5 de la NTE G.050', texto: 'Todo nivel de trabajo deberá contar con más de una vía de acceso y escape. No se admite el uso de una escalera de mano como única vía de acceso y egreso cuando el número de trabajadores sea superior a cuatro.' },
+  'g050_9_1': { ref: 'Numeral 9.1 de la NTE G.050', texto: 'Los andamios deben ser diseñados, montados, mantenidos y desmontados por personal calificado, siguiendo instrucciones del fabricante o planos aprobados por ingeniero. Toda plataforma de trabajo debe tener barandas y rodapiés.' },
+  'g050_14_1': { ref: 'Numeral 14.1 de la NTE G.050', texto: 'Los trabajadores que realicen labores con riesgo de caída de altura mayor a 1.80 m deberán usar sistemas de protección contra caídas, compuestos por arnés de cuerpo entero y línea de enganche con absorbedor de impacto conectados a un punto de anclaje.' },
+  'g050_14_2': { ref: 'Numeral 14.2 de la NTE G.050', texto: 'Los bordes de losas, rampas, plataformas y cualquier superficie de trabajo a 1.80 m o más de altura deben estar protegidos con sistemas de barandas rígidas de altura mínima 0.90 m con barra intermedia y rodapié de 0.15 m.' },
+  'g050_14_3': { ref: 'Numeral 14.3 de la NTE G.050', texto: 'Las aberturas en pisos y techos deben estar protegidas con cubiertas resistentes o rodeadas de barandas de seguridad de 0.90 m de altura mínima, con rodapié de 0.15 m, para prevenir caídas de personas u objetos.' },
+  'g050_16_1': { ref: 'Numeral 16.1 de la NTE G.050', texto: 'Las excavaciones de más de 1.50 m de profundidad deben contar con entibado, tablestacado o taludes de seguridad calculados por ingeniero responsable. Se prohíbe el ingreso de trabajadores sin los sistemas de protección contra derrumbes.' },
+  'g050_19_1': { ref: 'Numeral 19.1 de la NTE G.050', texto: 'Todo trabajo en espacio confinado requiere de PETAR, monitoreo de atmósfera, ventilación forzada, equipo de rescate disponible y supervisor permanente durante toda la tarea.' },
+  'g050_20_1': { ref: 'Numeral 20.1 de la NTE G.050', texto: 'Los trabajos de izaje de cargas deben contar obligatoriamente con Permiso Escrito para Trabajo de Alto Riesgo (PETAR) y procedimiento escrito de trabajo seguro aprobado por el responsable de SST de la obra.' },
+  'g050_22_1': { ref: 'Numeral 22.1 de la NTE G.050', texto: 'Las instalaciones eléctricas provisionales de obra deben ser ejecutadas por personal calificado y cumplir con el Código Nacional de Electricidad, incluyendo protecciones diferenciales y puesta a tierra.' },
+  // RS 021-83-TR
+  'rs_1': { ref: 'Art. 1° de la RS N° 021-83-TR', texto: 'El presente reglamento establece las normas mínimas de seguridad e higiene que deben cumplirse en las obras de edificación, siendo de aplicación obligatoria en todo el territorio nacional.' },
+  'rs_5': { ref: 'Art. 5° de la RS N° 021-83-TR', texto: 'Las obras de construcción deberán estar señalizadas adecuadamente para prevenir accidentes tanto del personal que labora en ella como del público en general.' },
+  'rs_11': { ref: 'Art. 11° de la RS N° 021-83-TR', texto: 'Toda escalera de más de dos metros de altura deberá estar provista de barandilla en sus costados libres. Las escaleras portátiles de madera no deben tener los peldaños ensamblados, sino encajados en los largueros.' },
+  'rs_15': { ref: 'Art. 15° de la RS N° 021-83-TR', texto: 'Todo trabajo que se efectúe a una altura mayor de 1.80 m sobre el nivel del piso debe realizarse con andamio, pasarela, plataforma de trabajo u otro dispositivo de seguridad, además del equipo de protección personal (arnés de seguridad).' },
+  'rs_17': { ref: 'Art. 17° de la RS N° 021-83-TR', texto: 'En todos los pisos de construcción en que puedan caer personas, se instalarán barandillas y rodapiés resistentes en todos los lados que estén abiertos. Las barandillas tendrán una altura mínima de 0.90 metros.' },
+  'rs_18': { ref: 'Art. 18° de la RS N° 021-83-TR', texto: 'Toda abertura en los suelos o techos de las obras en construcción deberá estar debidamente protegida con barandillas y rodapiés o bien cubierta con tablones resistentes fijados de modo que no puedan desplazarse.' },
+  'rs_19': { ref: 'Art. 19° de la RS N° 021-83-TR', texto: 'Los andamios deben estar construidos sólidamente y con materiales de buena calidad. Deben estar provistos de barandas, rodapiés y demás dispositivos de seguridad.' },
+  'rs_23': { ref: 'Art. 23° de la RS N° 021-83-TR', texto: 'La ropa de trabajo y el equipo de protección personal son de uso obligatorio. El empleador está obligado a suministrar dichos implementos y el trabajador a utilizarlos.' },
+  'rs_28': { ref: 'Art. 28° de la RS N° 021-83-TR', texto: 'Cuando la profundidad de la excavación sea mayor de 1.20 m se tomarán las precauciones necesarias para evitar desprendimientos, usando entibados, apuntalamientos, o dando taludes adecuados a las paredes de la excavación.' },
+  'rs_32': { ref: 'Art. 32° de la RS N° 021-83-TR', texto: 'Las máquinas elevadoras y el material a levantar estarán a cargo de personal calificado y se mantendrán en perfecto estado. Los ganchos contarán con dispositivos de seguridad.' },
+  'rs_34': { ref: 'Art. 34° de la RS N° 021-83-TR', texto: 'Los trabajos en pozos, zanjas profundas, cisternas u otras excavaciones similares requerirán de ventilación adecuada y personal calificado supervisando permanentemente.' },
+  'rs_40': { ref: 'Art. 40° de la RS N° 021-83-TR', texto: 'Las instalaciones eléctricas provisionales o definitivas de la obra deben ser ejecutadas por personal calificado. Se prohíbe el uso de instalaciones improvisadas.' }
+};
+
+// Reglas de mapeo: palabra clave → normas aplicables
+var REGLAS = [
+  { keys: ['altura','arnés','arnes','caída','caida','línea de vida','linea de vida','anticaída','anticaida'], normas: ['g050_14_1','rs_15'] },
+  { keys: ['baranda perimetral','baranda en borde','borde de losa','borde de rampa','perimetral'], normas: ['g050_14_2','rs_17'] },
+  { keys: ['escalera sin baranda','escalera sin barandilla','escalera portátil','escalera portatil','escalera de mano'], normas: ['g050_8_4','rs_11'] },
+  { keys: ['único acceso','unico acceso','único medio de acceso','unico medio de acceso','escalera único acceso'], normas: ['g050_8_5'] },
+  { keys: ['abertura','hueco en losa','vano sin protección','vano sin proteccion','losa sin protección','losa sin proteccion'], normas: ['g050_14_3','rs_18'] },
+  { keys: ['excavación sin entibado','excavacion sin entibado','excavación sin talud','excavacion sin talud','entibado','sepultamiento','derrumbe de excavación','derrumbe de excavacion'], normas: ['g050_16_1','rs_28'] },
+  { keys: ['espacio confinado','cisterna','pozo sin ventilación','pozo sin ventilacion','tanque cerrado'], normas: ['g050_19_1','rs_34'] },
+  { keys: ['izaje','izar','grúa','grua','carga suspendida','petar','permiso para trabajo de alto riesgo'], normas: ['g050_20_1','rs_32'] },
+  { keys: ['andamio sin baranda','andamio sin tablón','andamio sin tablon','andamio improvisado'], normas: ['g050_9_1','rs_19'] },
+  { keys: ['sin casco','sin epp','sin equipo de protección','sin equipo de proteccion','protección cefálica','proteccion cefalica'], normas: ['g050_3_1','rs_23'] },
+  { keys: ['sin señalización','sin señalizacion','falta de señal','señalética','señaletica'], normas: ['g050_4_1','rs_5'] },
+  { keys: ['electricidad','eléctrico','electrico','electrocuci','cable sin protección','cable sin proteccion','tablero eléctrico','tablero electrico'], normas: ['g050_22_1','rs_40'] }
+];
+
+function identificarNormas(texto) {
+  var txt = texto.toLowerCase();
+  var encontrados = [];
+  var vistos = {};
+  REGLAS.forEach(function(regla) {
+    var match = regla.keys.some(function(k) { return txt.indexOf(k) >= 0; });
+    if (match) {
+      regla.normas.forEach(function(id) {
+        if (!vistos[id] && NORMAS_DB[id]) {
+          vistos[id] = true;
+          encontrados.push(NORMAS_DB[id]);
+        }
+      });
+    }
+  });
+  return encontrados;
+}
+
+// ═══════════════════════════════════════════
+//  ESTADO GLOBAL
+// ═══════════════════════════════════════════
+var nrState = { ip: null, ice: null, ic: null, ie: null, sev: null };
+var anexoItems = [];
+var currentResultado = null;
+
+// ═══════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.pane').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('tab-' + t).classList.add('active');
+  document.getElementById('pane-' + t).classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  CALCULADORA NR
+// ═══════════════════════════════════════════
+function selIdx(name, val) {
+  nrState[name] = val;
+  for (var i = 1; i <= 3; i++) { var el = document.getElementById(name + '-' + i); if (el) el.classList.remove('sel'); }
+  var sel = document.getElementById(name + '-' + val); if (sel) sel.classList.add('sel');
+  var lbl = document.getElementById(name + '-lbl'); if (lbl) lbl.textContent = '= ' + val;
+  calcNR();
+}
+
+function selIC(val) {
+  nrState.ic = val;
+  ['1','2','3','1b','3b'].forEach(function(v) { var el = document.getElementById('ic-' + v); if (el) el.classList.remove('sel'); });
+  var sel = document.getElementById('ic-' + val); if (sel) sel.classList.add('sel');
+  var icNum = (val === '1b') ? 1 : (val === '3b') ? 3 : parseInt(val);
+  var lbl = document.getElementById('ic-lbl'); if (lbl) lbl.textContent = '= ' + icNum;
+  calcNR();
+}
+
+function selSev(val) {
+  nrState.sev = val;
+  for (var i = 1; i <= 3; i++) { var el = document.getElementById('sev-' + i); if (el) { el.classList.remove('sel-1'); el.classList.remove('sel-2'); el.classList.remove('sel-3'); } }
+  var sel = document.getElementById('sev-' + val); if (sel) sel.classList.add('sel-' + val);
+  var colors = { 1: 'var(--green)', 2: 'var(--amber)', 3: 'var(--red)' };
+  var lbl = document.getElementById('sev-lbl'); if (lbl) { lbl.textContent = '= ' + val; lbl.style.color = colors[val]; }
+  calcNR();
+}
+
+function calcNR() {
+  var ip = nrState.ip, ice = nrState.ice, icV = nrState.ic, ie = nrState.ie, sev = nrState.sev;
+  if (!ip || !ice || !icV || !ie || !sev) return null;
+  var icNum = (icV === '1b') ? 1 : (icV === '3b') ? 3 : parseInt(icV);
+  var P = ip + ice + icNum + ie;
+  var NR = P * sev;
+  var nivel, concl, cls;
+  if (NR >= 25) { nivel = 'INTOLERABLE (IT)'; concl = 'Riesgo grave — paralización + evaluación de cierre temporal'; cls = 'it'; }
+  else if (NR >= 17) { nivel = 'IMPORTANTE (IM)'; concl = 'Riesgo grave — paralización y/o prohibición de trabajos'; cls = 'im'; }
+  else { nivel = 'Sin nivel grave'; concl = 'No califica como riesgo grave. No procede paralización automática'; cls = 'ok'; }
+
+  var box = document.getElementById('nr-box');
+  box.style.display = 'flex';
+  box.className = 'nr-box nr-' + cls;
+  document.getElementById('nr-num').textContent = NR;
+  var nrLevel = document.getElementById('nr-level');
+  nrLevel.textContent = nivel;
+  document.getElementById('nr-detail').textContent = 'P=(' + ip + '+' + ice + '+' + icNum + '+' + ie + ')=' + P + ' × S=' + sev;
+  var badges = { it: 'it', im: 'im', ok: 'ok' };
+  document.getElementById('nr-badge').innerHTML = '<span class="nr-badge ' + badges[cls] + '">NR=' + NR + '</span>';
+  return { ip: ip, ice: ice, ic: icNum, ie: ie, P: P, sev: sev, NR: NR, nivel: nivel, concl: concl, cls: cls };
+}
+
+// ═══════════════════════════════════════════
+//  GENERAR DICTAMEN (SOLO NORMAS PRECARGADAS)
+// ═══════════════════════════════════════════
+function generarDictamen() {
+  var hechos = document.getElementById('v-hechos').value.trim();
+  var ubicacion = document.getElementById('v-ubicacion').value.trim();
+  var tareas = document.getElementById('v-tareas').value.trim();
+  var riesgo = document.getElementById('v-riesgo').value.trim();
+  var medida = document.getElementById('v-medida').value.trim();
+  var ntrab = document.getElementById('v-ntrab').value.trim();
+
+  if (!hechos || !ubicacion || !riesgo) { showToast('Complete: Hechos, Ubicación y Riesgo.'); return; }
+  var nr = calcNR();
+  if (!nr) { showToast('Seleccione todos los índices NR.'); return; }
+
+  var textoAnalisis = [hechos, tareas, riesgo].join(' ');
+  var normasEncontradas = identificarNormas(textoAnalisis);
+
+  var medidaInsp = nr.NR >= 25 ? 'PARALIZACIÓN TOTAL' : nr.NR >= 17 ? 'PARALIZACIÓN PARCIAL' : 'MEDIDA PREVENTIVA';
+  currentResultado = {
+    hechos: hechos, ubicacion: ubicacion, tareas: tareas, riesgo: riesgo,
+    medida: medida, ntrab: ntrab || 'no especificado',
+    nr: nr, normas: normasEncontradas, medidaInsp: medidaInsp
+  };
+
+  var html = '';
+
+  // Card: hechos
+  html += '<div class="res-card"><div class="res-card-hdr" style="background:var(--navy);color:var(--white)"><span>Hechos constatados</span></div>';
+  html += '<div class="res-card-body">' + hechos;
+  html += '<br><br><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--grey-3)">UBICACIÓN: </span>' + ubicacion;
+  if (tareas) html += '<br><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--grey-3)">TAREAS: </span>' + tareas;
+  html += '<br><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--grey-3)">RIESGO: </span>' + riesgo;
+  if (ntrab) html += '<br><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--grey-3)">TRABAJADORES: </span>' + ntrab;
+  html += '</div></div>';
+
+  // Card: NR
+  var nrCls = nr.cls === 'it' ? 'red' : nr.cls === 'im' ? 'amber' : 'green';
+  html += '<div class="res-card"><div class="res-card-hdr ' + nrCls + '"><span>Nivel de riesgo</span><span class="nr-badge ' + nr.cls + '">NR = ' + nr.NR + '</span></div>';
+  html += '<div class="res-card-body"><strong style="font-size:15px;font-family:var(--mono)">NR = (' + nr.ip + ' + ' + nr.ice + ' + ' + nr.ic + ' + ' + nr.ie + ') × ' + nr.sev + ' = ' + nr.NR + '</strong><br>';
+  html += '<span style="color:var(--grey-3);font-size:12px">P = ' + nr.P + ' | S = ' + nr.sev + ' | <strong>' + nr.nivel + '</strong></span><br>';
+  html += '<span style="font-size:13px">' + nr.concl + '.</span></div></div>';
+
+  // Card: normas
+  html += '<div class="res-card"><div class="res-card-hdr" style="background:var(--navy-mid);color:var(--white)"><span>Normas infringidas — NTE G.050 y RS N° 021-83-TR</span></div><div class="res-card-body">';
+  if (normasEncontradas.length === 0) {
+    html += '<div class="alert alert-warn">⚠ No se encontró información en las normas precargadas (NTE G.050 / RS N° 021-83-TR) para los hechos descritos. Verifique la descripción o consulte directamente la norma.</div>';
+  } else {
+    normasEncontradas.forEach(function(n) {
+      html += '<div class="art-block"><div class="art-ref">' + n.ref + '</div><div class="art-txt">' + n.texto + '</div></div>';
+    });
+  }
+  html += '</div></div>';
+
+  // Card: medida
+  html += '<div class="res-card"><div class="res-card-hdr ' + nrCls + '"><span>Medida inspectiva: ' + medidaInsp + '</span></div><div class="res-card-body" style="font-size:13px">';
+  if (nr.NR >= 17) html += 'Procede <strong>' + medidaInsp + '</strong> de trabajos/tareas (Arts. 3 y 4 RM 034-2020-TR). Nivel: <strong>' + nr.nivel + '</strong> (NR = ' + nr.NR + ').';
+  else html += 'No procede paralización automática. Se emite advertencia y se registra la observación.';
+  if (medida) html += '<br><br><strong>Medida correctiva:</strong> ' + medida;
+  html += '</div></div>';
+
+  document.getElementById('res-content').innerHTML = html;
+  document.getElementById('res-actions').style.display = 'block';
+  switchTab('resultado');
+}
+
+// ═══════════════════════════════════════════
+//  ANEXO DE CONSTANCIA
+// ═══════════════════════════════════════════
+function grabarAnexo() {
+  if (!currentResultado) { showToast('No hay resultado generado.'); return; }
+  anexoItems.push(JSON.parse(JSON.stringify(currentResultado)));
+  renderAnexo();
+  switchTab('anexo');
+}
+
+function buildNrStr(nr) {
+  return 'NR = (' + nr.ip + ' + ' + nr.ice + ' + ' + nr.ic + ' + ' + nr.ie + ') x ' + nr.sev + ' = ' + nr.NR + ', Nivel: ' + nr.nivel;
+}
+
+function renderAnexo() {
+  if (anexoItems.length === 0) {
+    document.getElementById('anexo-empty').style.display = 'block';
+    document.getElementById('anexo-content').style.display = 'none';
+    return;
+  }
+  document.getElementById('anexo-empty').style.display = 'none';
+  document.getElementById('anexo-content').style.display = 'block';
+  document.getElementById('anexo-count').textContent = anexoItems.length;
+
+  var maxNR = Math.max.apply(null, anexoItems.map(function(x) { return x.nr.NR; }));
+  var medidaFinal = maxNR >= 25 ? 'PARALIZACIÓN TOTAL' : maxNR >= 17 ? 'PARALIZACIÓN PARCIAL' : 'MEDIDA PREVENTIVA';
+
+  var intro = 'Del recorrido por la obra de construcción se ha verificado la existencia de riesgos grave e inminente para la seguridad y salud de los trabajadores detallados en cada punto, los mismos que se encuentran expuestos a peligros con alta probabilidad de generarse lesiones incapacitantes y/o muerte, según se describe a continuación:';
+
+  var items = '';
+  anexoItems.forEach(function(item, i) {
+    var refs = item.normas.length > 0 ? item.normas.map(function(n) { return n.ref; }).join('; ') : 'normas no identificadas en la base precargada';
+    var nrStr = buildNrStr(item.nr);
+    var p = item.hechos;
+    if (item.ubicacion) p += ', hechos verificados desarrollados en ' + item.ubicacion;
+    if (item.tareas) p += ', describiéndose como tareas: ' + item.tareas;
+    p += ', estando expuestos al <strong>' + item.riesgo + '</strong>';
+    p += ', vulnerándose ' + refs;
+    if (item.medida) p += ', debiendo el empleador ' + item.medida;
+    p += '. Los trabajadores afectados son <strong>' + item.ntrab + '</strong>, según el registro anexo y el nivel de riesgo calculado para el presente punto es: <strong>' + nrStr + '</strong>.';
+    items += '<p><strong>' + (i + 1) + '. </strong>' + p + '</p>';
+  });
+
+  var cierre = 'Por lo detallado anteriormente y conforme a la determinación del nivel de riesgo en materia de seguridad y salud en el trabajo (R.M. N° 034-2020-TR), el mismo que se adjunta, se procede a notificar la medida inspectiva de <strong>' + medidaFinal + '</strong> de trabajos / tareas, otorgándose, a solicitud del inspeccionado el plazo máximo de ........... días ......................... para su levantamiento, siendo la diligencia de verificación el ....................................... en horario de trabajo.';
+
+  document.getElementById('anexo-doc').innerHTML = '<p>' + intro + '</p>' + items + '<p>' + cierre + '</p>';
+}
+
+function copiarAnexo() {
+  var el = document.getElementById('anexo-doc');
+  if (!el) return;
+  var texto = el.innerText || el.textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texto).then(function() { mostrarCopia(); }).catch(function() { fallbackCopy(texto); });
+  } else { fallbackCopy(texto); }
+}
+
+function fallbackCopy(t) {
+  var ta = document.createElement('textarea');
+  ta.value = t; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); mostrarCopia(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function mostrarCopia() {
+  var m = document.getElementById('copy-msg'); m.style.display = 'block';
+  setTimeout(function() { m.style.display = 'none'; }, 2500);
+}
+
+function limpiarAnexo() {
+  if (!confirm('¿Eliminar todos los hechos grabados?')) return;
+  anexoItems = []; currentResultado = null; renderAnexo();
+}
+
+function limpiarFormulario() {
+  ['v-hechos','v-ubicacion','v-tareas','v-riesgo','v-medida','v-ntrab'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  nrState = { ip: null, ice: null, ic: null, ie: null, sev: null };
+  ['ip','ice','ie'].forEach(function(n) {
+    for (var i = 1; i <= 3; i++) { var el = document.getElementById(n + '-' + i); if (el) el.classList.remove('sel'); }
+    var lbl = document.getElementById(n + '-lbl'); if (lbl) lbl.textContent = '';
+  });
+  ['1','2','3','1b','3b'].forEach(function(v) { var el = document.getElementById('ic-' + v); if (el) el.classList.remove('sel'); });
+  var icL = document.getElementById('ic-lbl'); if (icL) icL.textContent = '';
+  for (var i = 1; i <= 3; i++) { var el = document.getElementById('sev-' + i); if (el) { el.classList.remove('sel-1'); el.classList.remove('sel-2'); el.classList.remove('sel-3'); } }
+  var sL = document.getElementById('sev-lbl'); if (sL) { sL.textContent = ''; sL.style.color = ''; }
+  document.getElementById('nr-box').style.display = 'none';
+  document.getElementById('res-content').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Complete la visita y genere el dictamen.</div>';
+  document.getElementById('res-actions').style.display = 'none';
+  currentResultado = null;
+  showToast('Formulario limpiado.');
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+// ═══════════════════════════════════════════
+//  ESTADO ONLINE/OFFLINE
+// ═══════════════════════════════════════════
+function updateStatus() {
+  var dot = document.getElementById('status-dot');
+  var txt = document.getElementById('status-txt');
+  if (navigator.onLine) {
+    dot.className = 'status-dot online'; txt.textContent = 'Online';
+  } else {
+    dot.className = 'status-dot'; txt.textContent = 'Offline';
+  }
+}
+window.addEventListener('online', updateStatus);
+window.addEventListener('offline', updateStatus);
+updateStatus();
+
+// ═══════════════════════════════════════════
+//  PWA: SERVICE WORKER + INSTALL
+// ═══════════════════════════════════════════
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function() {
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js').then(function(reg) {
+      console.log('SW registrado:', reg.scope);
+    }).catch(function(err) {
+      console.log('SW error:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
